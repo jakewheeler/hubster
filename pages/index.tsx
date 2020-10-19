@@ -23,7 +23,9 @@ import {
   Image,
   Divider,
   FormControl,
+  IconButton,
 } from '@chakra-ui/core';
+import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import React, { useState, ChangeEvent, useEffect, FormEvent } from 'react';
 import { SearchedUser, SearchResults, User } from './types';
 
@@ -71,29 +73,75 @@ function Header() {
   );
 }
 
+async function fetchSearchResults(searchText: string, currentPage: number) {
+  // free tier API only allows 1000 first results from search
+  const maxPages = 100;
+  const showPerPage = 10;
+
+  const searchUserEndpoint = 'https://api.github.com/search/users?';
+  const endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&page=${currentPage}&per_page=${showPerPage}`;
+  const searchData: SearchResults = await (
+    await fetch(endpointWithQuery)
+  ).json();
+
+  return searchData;
+}
+
 function UserSearch() {
   let [isLoading, setIsLoading] = useState(false);
   let [searchText, setSearchText] = useState('');
   let [users, setUsers] = useState<SearchedUser[]>([]);
-  const searchUserEndpoint = 'https://api.github.com/search/users?';
+  let [currentPage, setCurrentPage] = useState(1);
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
   }
 
-  async function onSearch(e: FormEvent<HTMLDivElement>) {
-    e.preventDefault();
+  useEffect(() => {
+    doSearch();
+  }, [currentPage]);
+
+  async function doSearch() {
     if (searchText !== '') {
-      let endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&per_page=10`;
       setUsers([]);
       setIsLoading(true);
-      let searchData: SearchResults = await (
-        await fetch(endpointWithQuery)
-      ).json();
-      setUsers(searchData.items);
-      setIsLoading(false);
+      console.log(currentPage);
+      try {
+        let searchData: SearchResults = await fetchSearchResults(
+          searchText,
+          currentPage
+        );
+        setUsers(searchData.items);
+      } catch (e) {
+        console.error('Could not fetch user list');
+      } finally {
+        setIsLoading(false);
+      }
     }
   }
+
+  async function onSearch(e: FormEvent<HTMLDivElement>) {
+    e.preventDefault();
+    await doSearch();
+  }
+
+  async function goForward() {
+    if (currentPage < 100) {
+      // we can go forward
+      setCurrentPage((current) => current + 1);
+      await doSearch();
+    }
+  }
+
+  async function goBack() {
+    if (currentPage > 1) {
+      // we can navigate back one page
+      setCurrentPage((current) => current - 1);
+      await doSearch();
+    }
+  }
+
+  // console.log(currentPage);
 
   return (
     <VStack spacing={10} minW='100%'>
@@ -112,8 +160,47 @@ function UserSearch() {
       </FormControl>
 
       {isLoading ? <Spinner /> : null}
-      {users.length > 0 ? <UserResults users={users} /> : null}
+      {users?.length > 0 ? (
+        <>
+          <UserResults users={users} />
+          <VStack>
+            <Text>{currentPage}</Text>
+            <HStack>
+              <BackPageButton onClick={goBack} />
+              <NextPageButton onClick={goForward} />
+            </HStack>
+          </VStack>
+        </>
+      ) : null}
     </VStack>
+  );
+}
+
+type PageButtonProps = {
+  onClick: () => void;
+};
+
+function BackPageButton({ onClick }: PageButtonProps) {
+  return (
+    <IconButton
+      aria-label='Go to last page'
+      onClick={onClick}
+      bgColor='gray.600'
+      color='gray.50'
+      icon={<ArrowLeftIcon />}
+    />
+  );
+}
+
+function NextPageButton({ onClick }: PageButtonProps) {
+  return (
+    <IconButton
+      aria-label='Go to next page'
+      onClick={onClick}
+      bgColor='gray.600'
+      color='gray.50'
+      icon={<ArrowRightIcon />}
+    />
   );
 }
 
@@ -186,27 +273,31 @@ function UserCard({ user }: { user: SearchedUser }) {
 }
 
 function useFetchUser(userUrl: string) {
-  const [user, setUser] = useState<User>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUser() {
-      setIsLoading(true);
-      if (!user) {
+      try {
         const userData: User = await (await fetch(userUrl)).json();
         setUser(userData);
+        setIsLoading(false);
+      } catch (e) {
+        console.log(e);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     fetchUser();
-  }, [user, setUser]);
-
-  console.log(user);
+  }, [userUrl, setUser, setIsLoading]);
 
   return [user, isLoading] as const;
 }
 
-function UserBio({ user }: { user: User }) {
+function UserBio({ userUrl }: { userUrl: string }) {
+  const [user, isLoading] = useFetchUser(userUrl);
+
+  if (isLoading) return <Spinner />;
+
   return (
     <VStack align='flex-start' spacing={4}>
       <Avatar
@@ -298,16 +389,15 @@ type UserModalProps = {
 } & UseDisclosureProps;
 
 function UserModal({ userUrl, isOpen, onClose }: UserModalProps) {
-  const [user, isLoading] = useFetchUser(userUrl);
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay>
           <ModalContent>
-            <ModalHeader>{user?.login}</ModalHeader>
+            <ModalHeader>{userUrl}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              {isLoading ? <Spinner /> : <UserBio user={user} />}
+              <UserBio userUrl={userUrl} />
             </ModalBody>
             <ModalFooter>
               <Button

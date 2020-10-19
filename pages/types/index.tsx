@@ -55,6 +55,7 @@ export interface User {
 }
 
 export interface SearchResults {
+  total_count: number;
   incomplete_results: boolean;
   items: SearchedUser[];
 }
