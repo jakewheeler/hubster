@@ -24,6 +24,8 @@ import {
   Divider,
   FormControl,
   IconButton,
+  useToast,
+  BoxProps,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import React, { useState, ChangeEvent, useEffect, FormEvent } from 'react';
@@ -92,6 +94,7 @@ function UserSearch() {
   let [searchText, setSearchText] = useState('');
   let [users, setUsers] = useState<SearchedUser[]>([]);
   let [currentPage, setCurrentPage] = useState(1);
+  let toast = useToast();
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
@@ -105,7 +108,6 @@ function UserSearch() {
     if (searchText !== '') {
       setUsers([]);
       setIsLoading(true);
-      console.log(currentPage);
       try {
         let searchData: SearchResults = await fetchSearchResults(
           searchText,
@@ -113,7 +115,14 @@ function UserSearch() {
         );
         setUsers(searchData.items);
       } catch (e) {
-        console.error('Could not fetch user list');
+        toast({
+          description: 'Could not fetch user list 😔',
+          duration: 9000,
+          isClosable: true,
+          position: 'bottom',
+          status: 'error',
+          title: 'Probably rate-limited',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -140,8 +149,6 @@ function UserSearch() {
       await doSearch();
     }
   }
-
-  // console.log(currentPage);
 
   return (
     <VStack spacing={10} minW='100%'>
@@ -309,6 +316,7 @@ function UserBio({ userUrl }: { userUrl: string }) {
       <Link href={user.html_url} alignSelf='center'>
         {user.login}
       </Link>
+      <Location city={user.location} alignSelf='center' />
       <Center alignSelf='center'>{user.bio}</Center>
 
       <Divider />
@@ -333,8 +341,34 @@ function Twitter({ username }: { username: string }) {
   if (!username) return null;
   return (
     <HStack>
-      <Image w='24px' h='24px' src='/twitter.svg' />;
+      <Image w='15px' h='15px' src='/twitter.svg' />;
       <Link href={`https://twitter.com/${username}`}>@{username}</Link>
+    </HStack>
+  );
+}
+
+type LocationProps = {
+  city: string;
+} & BoxProps;
+
+function Location({ city, ...props }: LocationProps) {
+  return (
+    <HStack {...props}>
+      <svg
+        style={{ height: 15, width: 15 }}
+        fill='none'
+        stroke='black'
+        viewBox='0 0 24 24'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          strokeWidth={2}
+          d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7'
+        />
+      </svg>
+      <Text>{city}</Text>
     </HStack>
   );
 }
