@@ -26,6 +26,8 @@ import {
   IconButton,
   useToast,
   BoxProps,
+  Tooltip,
+  TooltipProps,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import React, { useState, ChangeEvent, useEffect, FormEvent } from 'react';
@@ -320,20 +322,53 @@ function UserBio({ userUrl }: { userUrl: string }) {
       <Center alignSelf='center'>{user.bio}</Center>
 
       <Divider />
-      <VStack
-        align='flex-start'
-        border='solid'
-        borderColor='gray.200'
-        borderWidth={1}
-        borderRadius={5}
-        p={2}
-      >
-        <Text>{user.name}</Text>
-        <Company name={user.company} />
-        <Twitter username={user.twitter_username} />
-        <Blog url={user.blog} />
-      </VStack>
+      <HStack alignSelf='center'>
+        <VStack
+          align='flex-start'
+          border='solid'
+          borderColor='gray.200'
+          borderWidth={1}
+          borderRadius={5}
+          p={2}
+        >
+          <Text>{user.name}</Text>
+          <Company name={user.company} />
+          <Twitter username={user.twitter_username} />
+          <Blog url={user.blog} />
+        </VStack>
+        <VStack
+          align='flex-start'
+          border='solid'
+          borderColor='gray.200'
+          borderWidth={1}
+          borderRadius={5}
+          p={2}
+        >
+          <Text>Followers: {user.followers}</Text>
+          <Text>Followers: {user.following}</Text>
+          <Text>Number of repos: {user.public_repos}</Text>
+          <Text>Number of gists: {user.public_gists}</Text>
+        </VStack>
+      </HStack>
     </VStack>
+  );
+}
+
+type ModalToolTipProps = {
+  text: string;
+} & TooltipProps;
+
+function ModalToolTip({ text, ...props }: ModalToolTipProps) {
+  return (
+    <Tooltip
+      {...props}
+      shouldWrapChildren
+      label={text}
+      aria-label={text}
+      zIndex={1401}
+    >
+      {props.children}
+    </Tooltip>
   );
 }
 
@@ -341,7 +376,9 @@ function Twitter({ username }: { username: string }) {
   if (!username) return null;
   return (
     <HStack>
-      <Image w='15px' h='15px' src='/twitter.svg' />;
+      <ModalToolTip text='Twitter'>
+        <Image w='15px' h='15px' src='/twitter.svg' />
+      </ModalToolTip>
       <Link href={`https://twitter.com/${username}`}>@{username}</Link>
     </HStack>
   );
@@ -353,23 +390,27 @@ type LocationProps = {
 
 function Location({ city, ...props }: LocationProps) {
   return (
-    <HStack {...props}>
-      <svg
-        style={{ height: 15, width: 15 }}
-        fill='none'
-        stroke='black'
-        viewBox='0 0 24 24'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7'
-        />
-      </svg>
-      <Text>{city}</Text>
-    </HStack>
+    <Box {...props}>
+      <ModalToolTip text={'Location'}>
+        <HStack>
+          <svg
+            style={{ height: 15, width: 15 }}
+            fill='none'
+            stroke='black'
+            viewBox='0 0 24 24'
+            xmlns='http://www.w3.org/2000/svg'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7'
+            />
+          </svg>
+          <Text>{city}</Text>
+        </HStack>
+      </ModalToolTip>
+    </Box>
   );
 }
 
@@ -377,20 +418,22 @@ function Blog({ url }: { url: string | null }) {
   if (!url) return null;
   return (
     <HStack>
-      <svg
-        style={{ height: 15, width: 15 }}
-        fill='none'
-        stroke='black'
-        viewBox='0 0 24 24'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'
-        />
-      </svg>
+      <ModalToolTip text={'Blog'}>
+        <svg
+          style={{ height: 15, width: 15 }}
+          fill='none'
+          stroke='black'
+          viewBox='0 0 24 24'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={2}
+            d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'
+          />
+        </svg>
+      </ModalToolTip>
       <Link>{url}</Link>
     </HStack>
   );
@@ -398,23 +441,27 @@ function Blog({ url }: { url: string | null }) {
 
 function Company({ name }: { name: string | null }) {
   return (
-    <HStack spacing={2}>
-      <svg
-        style={{ height: 15, width: 15 }}
-        fill='none'
-        stroke='black'
-        viewBox='0 0 24 24'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
-        />
-      </svg>
-      <Text color='gray.900'>{!name ? 'Unknown' : name}</Text>
-    </HStack>
+    <Box>
+      <HStack spacing={2}>
+        <ModalToolTip text={'Company'}>
+          <svg
+            style={{ height: 15, width: 15 }}
+            fill='none'
+            stroke='black'
+            viewBox='0 0 24 24'
+            xmlns='http://www.w3.org/2000/svg'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+            />
+          </svg>
+        </ModalToolTip>
+        <Text color='gray.900'>{!name ? 'Unknown' : name}</Text>
+      </HStack>
+    </Box>
   );
 }
 
@@ -428,7 +475,9 @@ function UserModal({ userUrl, isOpen, onClose }: UserModalProps) {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay>
           <ModalContent>
-            <ModalHeader>{userUrl}</ModalHeader>
+            <ModalHeader>
+              {userUrl.substr(userUrl.lastIndexOf('/') + 1)}
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               <UserBio userUrl={userUrl} />
