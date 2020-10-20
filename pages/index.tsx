@@ -233,23 +233,25 @@ type PublicRepositoryProps = {
 
 function PublicRepositories({ repoCount }: PublicRepositoryProps) {
   return (
-    <HStack spacing={2}>
-      <svg
-        style={{ height: 15, width: 15 }}
-        fill='none'
-        stroke='white'
-        viewBox='0 0 24 24'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'
-        />
-      </svg>
-      <Text color='gray.50'>{repoCount}</Text>
-    </HStack>
+    <ModalToolTip text={'Public repositories'}>
+      <HStack spacing={2}>
+        <svg
+          style={{ height: 15, width: 15 }}
+          fill='none'
+          stroke='black'
+          viewBox='0 0 24 24'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            strokeWidth={2}
+            d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4'
+          />
+        </svg>
+        <Text>{repoCount}</Text>
+      </HStack>
+    </ModalToolTip>
   );
 }
 
@@ -305,10 +307,15 @@ function useFetchUser(userUrl: string) {
 function UserBio({ userUrl }: { userUrl: string }) {
   const [user, isLoading] = useFetchUser(userUrl);
 
-  if (isLoading) return <Spinner />;
+  if (isLoading)
+    return (
+      <Center>
+        <Spinner />
+      </Center>
+    );
 
   return (
-    <VStack align='flex-start' spacing={4}>
+    <VStack spacing={4}>
       <Avatar
         size='2xl'
         name={user.login}
@@ -322,7 +329,7 @@ function UserBio({ userUrl }: { userUrl: string }) {
       <Center alignSelf='center'>{user.bio}</Center>
 
       <Divider />
-      <HStack alignSelf='center'>
+      <Flex flexDir={{ base: 'column', md: 'row' }}>
         <VStack
           align='flex-start'
           border='solid'
@@ -346,10 +353,10 @@ function UserBio({ userUrl }: { userUrl: string }) {
         >
           <Text>Followers: {user.followers}</Text>
           <Text>Followers: {user.following}</Text>
-          <Text>Number of repos: {user.public_repos}</Text>
+          <Text>Repositories: {user.public_repos}</Text>
           <Text>Number of gists: {user.public_gists}</Text>
         </VStack>
-      </HStack>
+      </Flex>
     </VStack>
   );
 }
