@@ -28,6 +28,9 @@ import {
   BoxProps,
   Tooltip,
   TooltipProps,
+  SkeletonCircle,
+  SkeletonText,
+  Skeleton,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import React, { useState, ChangeEvent, useEffect, FormEvent } from 'react';
@@ -286,6 +289,7 @@ function UserCard({ user }: { user: SearchedUser }) {
 function useFetchUser(userUrl: string) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -293,34 +297,29 @@ function useFetchUser(userUrl: string) {
         const userData: User = await (await fetch(userUrl)).json();
         setUser(userData);
         setIsLoading(false);
+        setIsError(false);
       } catch (e) {
-        console.log(e);
+        console.error(e);
+        setUser(null);
         setIsLoading(false);
+        setIsError(true);
       }
     }
     fetchUser();
   }, [userUrl, setUser, setIsLoading]);
 
-  return [user, isLoading] as const;
+  return [user, isLoading, isError] as const;
 }
 
-function UserBio({ userUrl }: { userUrl: string }) {
-  const [user, isLoading] = useFetchUser(userUrl);
-
-  if (isLoading)
-    return (
-      <Center>
-        <Spinner />
-      </Center>
-    );
-
+function UserBio({ user }: { user: User }) {
   return (
-    <VStack spacing={4}>
+    <VStack spacing={4} borderColor='gray.600' borderWidth={1} borderRadius={5}>
       <Avatar
         size='2xl'
         name={user.login}
         src={user.avatar_url}
         alignSelf='center'
+        mt={2}
       />
       <Link href={user.html_url} alignSelf='center'>
         {user.login}
@@ -330,27 +329,13 @@ function UserBio({ userUrl }: { userUrl: string }) {
 
       <Divider />
       <Flex flexDir={{ base: 'column', md: 'row' }}>
-        <VStack
-          align='flex-start'
-          border='solid'
-          borderColor='gray.200'
-          borderWidth={1}
-          borderRadius={5}
-          p={2}
-        >
+        <VStack align='flex-start' p={5}>
           <Text>{user.name}</Text>
           <Company name={user.company} />
           <Twitter username={user.twitter_username} />
           <Blog url={user.blog} />
         </VStack>
-        <VStack
-          align='flex-start'
-          border='solid'
-          borderColor='gray.200'
-          borderWidth={1}
-          borderRadius={5}
-          p={2}
-        >
+        <VStack align='flex-start' p={5}>
           <Text>Followers: {user.followers}</Text>
           <Text>Followers: {user.following}</Text>
           <Text>Repositories: {user.public_repos}</Text>
@@ -392,10 +377,12 @@ function Twitter({ username }: { username: string }) {
 }
 
 type LocationProps = {
-  city: string;
+  city: string | null;
 } & BoxProps;
 
 function Location({ city, ...props }: LocationProps) {
+  if (!city) return null;
+
   return (
     <Box {...props}>
       <ModalToolTip text={'Location'}>
@@ -472,22 +459,50 @@ function Company({ name }: { name: string | null }) {
   );
 }
 
+function ModalLoadingSkeleton() {
+  return (
+    <Box padding='6' boxShadow='lg' bg='white' w='100%' h='100%'>
+      <SkeletonCircle size='10' />
+      <SkeletonText mt='4' noOfLines={4} spacing='4' />
+    </Box>
+  );
+}
+
 type UserModalProps = {
   userUrl: string;
 } & UseDisclosureProps;
 
 function UserModal({ userUrl, isOpen, onClose }: UserModalProps) {
+  const [user, isLoading, isError] = useFetchUser(userUrl);
+  const toast = useToast();
+
+  if (isError) {
+    toast({
+      status: 'error',
+      description: `Couldn't fetch user 😢`,
+      duration: 9000,
+      isClosable: true,
+    });
+    return null;
+  }
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay>
           <ModalContent>
             <ModalHeader>
-              {userUrl.substr(userUrl.lastIndexOf('/') + 1)}
+              <Skeleton isLoaded={!isLoading}>{user?.login}</Skeleton>{' '}
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <UserBio userUrl={userUrl} />
+              {isLoading ? (
+                <Center>
+                  <ModalLoadingSkeleton />
+                </Center>
+              ) : (
+                <UserBio user={user} />
+              )}
             </ModalBody>
             <ModalFooter>
               <Button
