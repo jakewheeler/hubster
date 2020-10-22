@@ -21,28 +21,9 @@ import { User } from '../types';
 import UserBio from './UserBio';
 
 function useFetchUser(userUrl: string) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const userData: User = await (await fetch(userUrl)).json();
-        setUser(userData);
-        setIsLoading(false);
-        setIsError(false);
-      } catch (e) {
-        console.error(e);
-        setUser(null);
-        setIsLoading(false);
-        setIsError(true);
-      }
-    }
-    fetchUser();
-  }, [userUrl, setUser, setIsLoading]);
-
-  return [user, isLoading, isError] as const;
+  return useQuery<User, Error>(['users', userUrl], () =>
+    fetch(userUrl).then((resp) => resp.json())
+  );
 }
 
 function ModalLoadingSkeleton() {
@@ -63,9 +44,7 @@ export default function UserModal({
   isOpen,
   onClose,
 }: UserModalProps) {
-  const { isLoading, isError, data: user } = useQuery(['users', userUrl], () =>
-    fetch(userUrl).then((resp) => resp.json())
-  );
+  const { isLoading, isError, data: user } = useFetchUser(userUrl);
   const toast = useToast();
 
   if (isError) {
