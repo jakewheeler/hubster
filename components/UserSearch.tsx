@@ -8,6 +8,7 @@ import {
   HStack,
   Text,
   IconButton,
+  IconButtonProps,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
@@ -38,7 +39,6 @@ export default function UserSearch() {
           searchText,
           currentPage
         );
-        console.log(searchData);
         setUsers(searchData.items);
       } catch (e) {
         toast({
@@ -57,6 +57,7 @@ export default function UserSearch() {
 
   async function onSearch(e: FormEvent<HTMLDivElement>) {
     e.preventDefault();
+    setCurrentPage(1);
     await doSearch();
   }
 
@@ -99,8 +100,8 @@ export default function UserSearch() {
           <VStack>
             <Text>{currentPage}</Text>
             <HStack>
-              <BackPageButton onClick={goBack} />
-              <NextPageButton onClick={goForward} />
+              <BackPageButton aria-label='Go back to last page' onClick={goBack} />
+              <NextPageButton aria-label='Go forward to next page' onClick={goForward} />
             </HStack>
           </VStack>
         </>
@@ -109,7 +110,7 @@ export default function UserSearch() {
   );
 }
 
-async function fetchSearchResults(searchText: string, currentPage: number) {
+async function fetchSearchResults(searchText: string, currentPage: number): Promise<SearchResults> {
   // free tier API only allows 1000 first results from search
   const maxPages = 100;
   const showPerPage = 10;
@@ -117,7 +118,12 @@ async function fetchSearchResults(searchText: string, currentPage: number) {
   const searchUserEndpoint = 'https://api.github.com/search/users?';
   const endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&page=${currentPage}&per_page=${showPerPage}`;
   const resp = await fetch(endpointWithQuery);
-  const searchData = await resp.json();
+
+  if (!resp.ok) {
+    throw new Error('Rate limit has been exceeded.')
+  }
+
+  const searchData: SearchResults = await resp.json();
 
   return searchData;
 }
@@ -136,30 +142,25 @@ function UserResults({ users }: UserResultsProps) {
   );
 }
 
-type PageButtonProps = {
-  onClick: () => void;
-};
 
-function BackPageButton({ onClick }: PageButtonProps) {
+function BackPageButton({...props }: IconButtonProps) {
   return (
     <IconButton
-      aria-label='Go to last page'
-      onClick={onClick}
       bgColor='gray.600'
       color='gray.50'
       icon={<ArrowLeftIcon />}
+      {...props}
     />
   );
 }
 
-function NextPageButton({ onClick }: PageButtonProps) {
+function NextPageButton({...props }: IconButtonProps) {
   return (
     <IconButton
-      aria-label='Go to next page'
-      onClick={onClick}
       bgColor='gray.600'
       color='gray.50'
       icon={<ArrowRightIcon />}
+      {...props}
     />
   );
 }
