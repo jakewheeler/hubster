@@ -16,6 +16,7 @@ import {
   Button,
 } from '@chakra-ui/core';
 import { useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
 import { User } from '../types';
 import UserBio from './UserBio';
 
@@ -62,7 +63,9 @@ export default function UserModal({
   isOpen,
   onClose,
 }: UserModalProps) {
-  const [user, isLoading, isError] = useFetchUser(userUrl);
+  const { isLoading, isError, data: user } = useQuery(['users', userUrl], () =>
+    fetch(userUrl).then((resp) => resp.json())
+  );
   const toast = useToast();
 
   if (isError) {

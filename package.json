@@ -12,7 +12,8 @@
     "@chakra-ui/icons": "^1.0.0-rc.5",
     "next": "9.5.5",
     "react": "16.14.0",
-    "react-dom": "16.14.0"
+    "react-dom": "16.14.0",
+    "react-query": "^2.25.2"
   },
   "devDependencies": {
     "@types/node": "^14.11.8",
