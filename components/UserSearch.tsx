@@ -100,8 +100,12 @@ export default function UserSearch() {
           <VStack>
             <Text>{currentPage}</Text>
             <HStack>
-              <BackPageButton aria-label='Go back to last page' onClick={goBack} />
-              <NextPageButton aria-label='Go forward to next page' onClick={goForward} />
+              <BackPageButton aria-label='Go back to last page' 
+              disabled={currentPage <= 1} onClick={goBack} />
+
+              <NextPageButton aria-label='Go forward to next page' 
+              disabled={currentPage >= 100} 
+              onClick={goForward} />
             </HStack>
           </VStack>
         </>
