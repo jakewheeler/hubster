@@ -14,44 +14,51 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { SearchedUser, SearchResults } from '../types';
 import UserCard from './UserCard';
+import { useQuery } from 'react-query';
 
 export default function UserSearch() {
-  let [isLoading, setIsLoading] = useState(false);
   let [searchText, setSearchText] = useState('');
-  let [users, setUsers] = useState<SearchedUser[]>([]);
   let [currentPage, setCurrentPage] = useState(1);
   let toast = useToast();
+
+  const { isError, isLoading, data: users, refetch } = useQuery<
+    SearchedUser[],
+    Error
+  >(
+    ['users', searchText, currentPage],
+    () =>
+      fetchSearchResults(searchText, currentPage).then(
+        (results) => results.items
+      ),
+    {
+      enabled: false,
+      onError: () => console.log('my error'),
+      refetchOnWindowFocus: false,
+      retry: false,
+      refetchOnMount: false,
+    }
+  );
+
+  console.log(isError);
+
+  if (isError) {
+    toast({
+      description: 'Could not fetch user list 😔',
+      duration: 9000,
+      isClosable: true,
+      position: 'bottom',
+      status: 'error',
+      title: 'Probably rate-limited',
+    });
+  }
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
   }
 
-  useEffect(() => {
-    doSearch();
-  }, [currentPage]);
-
   async function doSearch() {
     if (searchText !== '') {
-      setUsers([]);
-      setIsLoading(true);
-      try {
-        let searchData: SearchResults = await fetchSearchResults(
-          searchText,
-          currentPage
-        );
-        setUsers(searchData.items);
-      } catch (e) {
-        toast({
-          description: 'Could not fetch user list 😔',
-          duration: 9000,
-          isClosable: true,
-          position: 'bottom',
-          status: 'error',
-          title: 'Probably rate-limited',
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      await refetch();
     }
   }
 
@@ -100,12 +107,17 @@ export default function UserSearch() {
           <VStack>
             <Text>{currentPage}</Text>
             <HStack>
-              <BackPageButton aria-label='Go back to last page' 
-              disabled={currentPage <= 1} onClick={goBack} />
+              <BackPageButton
+                aria-label='Go back to last page'
+                disabled={currentPage <= 1}
+                onClick={goBack}
+              />
 
-              <NextPageButton aria-label='Go forward to next page' 
-              disabled={currentPage >= 100} 
-              onClick={goForward} />
+              <NextPageButton
+                aria-label='Go forward to next page'
+                disabled={currentPage >= 100}
+                onClick={goForward}
+              />
             </HStack>
           </VStack>
         </>
@@ -114,7 +126,10 @@ export default function UserSearch() {
   );
 }
 
-async function fetchSearchResults(searchText: string, currentPage: number): Promise<SearchResults> {
+async function fetchSearchResults(
+  searchText: string,
+  currentPage: number
+): Promise<SearchResults> {
   // free tier API only allows 1000 first results from search
   const maxPages = 100;
   const showPerPage = 10;
@@ -124,7 +139,7 @@ async function fetchSearchResults(searchText: string, currentPage: number): Prom
   const resp = await fetch(endpointWithQuery);
 
   if (!resp.ok) {
-    throw new Error('Rate limit has been exceeded.')
+    throw new Error('Rate limit has been exceeded.');
   }
 
   const searchData: SearchResults = await resp.json();
@@ -146,8 +161,7 @@ function UserResults({ users }: UserResultsProps) {
   );
 }
 
-
-function BackPageButton({...props }: IconButtonProps) {
+function BackPageButton({ ...props }: IconButtonProps) {
   return (
     <IconButton
       bgColor='gray.600'
@@ -158,7 +172,7 @@ function BackPageButton({...props }: IconButtonProps) {
   );
 }
 
-function NextPageButton({...props }: IconButtonProps) {
+function NextPageButton({ ...props }: IconButtonProps) {
   return (
     <IconButton
       bgColor='gray.600'
