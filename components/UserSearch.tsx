@@ -11,46 +11,45 @@ import {
   IconButtonProps,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { SearchedUser, SearchResults } from '../types';
+import { ChangeEvent, FormEvent, useState } from 'react';
+import { RateLimitResponse, SearchedUser, SearchResults } from '../types';
 import UserCard from './UserCard';
-import { useQuery } from 'react-query';
+import { usePaginatedQuery } from 'react-query';
 
 export default function UserSearch() {
   let [searchText, setSearchText] = useState('');
-  let [currentPage, setCurrentPage] = useState(1);
+  let [page, setPage] = useState(1);
   let toast = useToast();
 
-  const { isError, isLoading, data: users, refetch } = useQuery<
-    SearchedUser[],
-    Error
-  >(
-    ['users', searchText, currentPage],
-    () =>
-      fetchSearchResults(searchText, currentPage).then(
-        (results) => results.items
-      ),
+  const {
+    isError,
+    isLoading,
+    resolvedData: users,
+    latestData,
+    refetch,
+  } = usePaginatedQuery<SearchedUser[], Error>(
+    [`users/${searchText}`, page],
+    async (key: string, page: number) => {
+      console.log(page);
+      let results = await fetchSearchResults(searchText, page);
+      return results.items;
+    },
     {
       enabled: false,
-      onError: () => console.log('my error'),
+      onError: () =>
+        toast({
+          description: 'Could not fetch user list 😔',
+          duration: 9000,
+          isClosable: true,
+          position: 'bottom',
+          status: 'error',
+          title: 'Probably rate-limited',
+        }),
       refetchOnWindowFocus: false,
-      retry: false,
+      retry: 3,
       refetchOnMount: false,
     }
   );
-
-  console.log(isError);
-
-  if (isError) {
-    toast({
-      description: 'Could not fetch user list 😔',
-      duration: 9000,
-      isClosable: true,
-      position: 'bottom',
-      status: 'error',
-      title: 'Probably rate-limited',
-    });
-  }
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
@@ -64,24 +63,8 @@ export default function UserSearch() {
 
   async function onSearch(e: FormEvent<HTMLDivElement>) {
     e.preventDefault();
-    setCurrentPage(1);
+    setPage(1);
     await doSearch();
-  }
-
-  async function goForward() {
-    if (currentPage < 100) {
-      // we can go forward
-      setCurrentPage((current) => current + 1);
-      await doSearch();
-    }
-  }
-
-  async function goBack() {
-    if (currentPage > 1) {
-      // we can navigate back one page
-      setCurrentPage((current) => current - 1);
-      await doSearch();
-    }
   }
 
   return (
@@ -101,22 +84,27 @@ export default function UserSearch() {
       </FormControl>
 
       {isLoading ? <Spinner /> : null}
-      {users?.length > 0 ? (
+      {isError ? <Text color='red.500'>An error has occurred</Text> : null}
+      {users && users.length > 0 ? (
         <>
           <UserResults users={users} />
           <VStack>
-            <Text>{currentPage}</Text>
+            <Text>{page}</Text>
             <HStack>
               <BackPageButton
                 aria-label='Go back to last page'
-                disabled={currentPage <= 1}
-                onClick={goBack}
+                disabled={page === 1}
+                onClick={() =>
+                  setPage((prevState) => Math.max(prevState - 1, 1))
+                }
               />
 
               <NextPageButton
                 aria-label='Go forward to next page'
-                disabled={currentPage >= 100}
-                onClick={goForward}
+                disabled={page === 100}
+                onClick={() =>
+                  setPage((prevState) => Math.min(prevState + 1, 100))
+                }
               />
             </HStack>
           </VStack>
@@ -124,6 +112,25 @@ export default function UserSearch() {
       ) : null}
     </VStack>
   );
+}
+
+async function isSearchRateLimited(): Promise<boolean> {
+  const url = 'https://api.github.com/rate_limit';
+  try {
+    const resp = await fetch(url);
+    const data: RateLimitResponse = await resp.json();
+    return data.resources.search.remaining <= 0;
+  } catch (e) {
+    console.error('Could not check rate limit status.');
+  }
+  return true;
+}
+
+class RateLimitedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RateLimitedError';
+  }
 }
 
 async function fetchSearchResults(
@@ -134,12 +141,18 @@ async function fetchSearchResults(
   const maxPages = 100;
   const showPerPage = 10;
 
+  // check if we're rate limited before doing anything
+  const isRateLimited = await isSearchRateLimited();
+  if (isRateLimited) {
+    throw new RateLimitedError('Rate limited');
+  }
+
   const searchUserEndpoint = 'https://api.github.com/search/users?';
   const endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&page=${currentPage}&per_page=${showPerPage}`;
   const resp = await fetch(endpointWithQuery);
 
   if (!resp.ok) {
-    throw new Error('Rate limit has been exceeded.');
+    throw new Error('Something went wrong.');
   }
 
   const searchData: SearchResults = await resp.json();
