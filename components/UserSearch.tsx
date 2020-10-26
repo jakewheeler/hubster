@@ -9,33 +9,32 @@ import {
   Text,
   IconButton,
   IconButtonProps,
+  BoxProps,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
 import { RateLimitResponse, SearchedUser, SearchResults } from '../types';
 import UserCard from './UserCard';
 import { usePaginatedQuery } from 'react-query';
 
 export default function UserSearch() {
   let [searchText, setSearchText] = useState('');
+  let [enableSearch, setEnableSearch] = useState(false);
   let [page, setPage] = useState(1);
   let toast = useToast();
 
-  const {
-    isError,
-    isLoading,
-    resolvedData: users,
-    latestData,
-    refetch,
-  } = usePaginatedQuery<SearchedUser[], Error>(
+  const { status, resolvedData: users, latestData } = usePaginatedQuery<
+    SearchedUser[],
+    Error
+  >(
     [`users/${searchText}`, page],
     async (key: string, page: number) => {
-      console.log(page);
+      // console.log(key, page);
       let results = await fetchSearchResults(searchText, page);
       return results.items;
     },
     {
-      enabled: false,
+      enabled: enableSearch,
       onError: () =>
         toast({
           description: 'Could not fetch user list 😔',
@@ -48,16 +47,20 @@ export default function UserSearch() {
       refetchOnWindowFocus: false,
       retry: 3,
       refetchOnMount: false,
+      staleTime: 600000,
     }
   );
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
+    setEnableSearch(false);
+    setPage(1);
   }
 
   async function doSearch() {
     if (searchText !== '') {
-      await refetch();
+      // await refetch();
+      setEnableSearch(true);
     }
   }
 
@@ -83,33 +86,74 @@ export default function UserSearch() {
         </HStack>
       </FormControl>
 
-      {isLoading ? <Spinner /> : null}
-      {isError ? <Text color='red.500'>An error has occurred</Text> : null}
-      {users && users.length > 0 ? (
+      {status === 'loading' ? <Spinner /> : null}
+      {status === 'error' ? (
+        <Text color='red.500'>An error has occurred</Text>
+      ) : null}
+      {status === 'success' && enableSearch ? (
         <>
+          <PageController
+            page={page}
+            setPage={setPage}
+            setEnableSearch={setEnableSearch}
+            latestData={latestData}
+            totalCount={users.length}
+            display={{ base: 'block', md: 'none' }}
+          />
           <UserResults users={users} />
-          <VStack>
-            <Text>{page}</Text>
-            <HStack>
-              <BackPageButton
-                aria-label='Go back to last page'
-                disabled={page === 1}
-                onClick={() =>
-                  setPage((prevState) => Math.max(prevState - 1, 1))
-                }
-              />
-
-              <NextPageButton
-                aria-label='Go forward to next page'
-                disabled={page === 100}
-                onClick={() =>
-                  setPage((prevState) => Math.min(prevState + 1, 100))
-                }
-              />
-            </HStack>
-          </VStack>
+          <PageController
+            page={page}
+            setPage={setPage}
+            setEnableSearch={setEnableSearch}
+            totalCount={users.length}
+            latestData={latestData}
+          />
         </>
       ) : null}
+    </VStack>
+  );
+}
+
+type PageControllerProps = {
+  setEnableSearch: (value: SetStateAction<boolean>) => void;
+  setPage: (value: SetStateAction<number>) => void;
+  page: number;
+  latestData: SearchedUser[];
+  totalCount: number;
+} & BoxProps;
+
+function PageController({
+  setEnableSearch,
+  setPage,
+  page,
+  latestData,
+  totalCount,
+  ...props
+}: PageControllerProps) {
+  return (
+    <VStack {...props}>
+      <Text align='center'>{page}</Text>
+      <HStack>
+        <BackPageButton
+          aria-label='Go back to last page'
+          disabled={page === 1}
+          onClick={() => {
+            setEnableSearch(true);
+            setPage((prevState) => Math.max(prevState - 1, 1));
+          }}
+        />
+
+        <NextPageButton
+          aria-label='Go forward to next page'
+          disabled={page === 100 || totalCount < 10}
+          onClick={() => {
+            setEnableSearch(true);
+            setPage((prevState) =>
+              !latestData ? prevState : Math.min(prevState + 1, 100)
+            );
+          }}
+        />
+      </HStack>
     </VStack>
   );
 }
