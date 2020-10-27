@@ -13,9 +13,10 @@ import {
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
-import { RateLimitResponse, SearchedUser, SearchResults } from '../types';
+import { SearchedUser } from '../types';
 import UserCard from './UserCard';
 import { usePaginatedQuery } from 'react-query';
+import { fetchSearchResults } from '../api';
 
 export default function UserSearch() {
   let [searchText, setSearchText] = useState('');
@@ -45,7 +46,7 @@ export default function UserSearch() {
           title: 'Probably rate-limited',
         }),
       refetchOnWindowFocus: false,
-      retry: 3,
+      retry: false,
       refetchOnMount: false,
       staleTime: 600000,
     }
@@ -86,9 +87,8 @@ export default function UserSearch() {
         </HStack>
       </FormControl>
 
-      {status === 'loading' ? <Spinner /> : null}
-      {status === 'error' ? (
-        <Text color='red.500'>An error has occurred</Text>
+      {status === 'loading' ? (
+        <Spinner top={10} right={10} position='fixed' />
       ) : null}
       {status === 'success' && enableSearch ? (
         <>
@@ -156,52 +156,6 @@ function PageController({
       </HStack>
     </VStack>
   );
-}
-
-async function isSearchRateLimited(): Promise<boolean> {
-  const url = 'https://api.github.com/rate_limit';
-  try {
-    const resp = await fetch(url);
-    const data: RateLimitResponse = await resp.json();
-    return data.resources.search.remaining <= 0;
-  } catch (e) {
-    console.error('Could not check rate limit status.');
-  }
-  return true;
-}
-
-class RateLimitedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'RateLimitedError';
-  }
-}
-
-async function fetchSearchResults(
-  searchText: string,
-  currentPage: number
-): Promise<SearchResults> {
-  // free tier API only allows 1000 first results from search
-  const maxPages = 100;
-  const showPerPage = 10;
-
-  // check if we're rate limited before doing anything
-  const isRateLimited = await isSearchRateLimited();
-  if (isRateLimited) {
-    throw new RateLimitedError('Rate limited');
-  }
-
-  const searchUserEndpoint = 'https://api.github.com/search/users?';
-  const endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&page=${currentPage}&per_page=${showPerPage}`;
-  const resp = await fetch(endpointWithQuery);
-
-  if (!resp.ok) {
-    throw new Error('Something went wrong.');
-  }
-
-  const searchData: SearchResults = await resp.json();
-
-  return searchData;
 }
 
 type UserResultsProps = {
