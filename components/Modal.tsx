@@ -14,6 +14,7 @@ import {
   ModalFooter,
   ModalContent,
   Button,
+  Text,
 } from '@chakra-ui/core';
 import { useQuery } from 'react-query';
 import { User } from '../types';
@@ -36,6 +37,8 @@ function ModalLoadingSkeleton() {
 
 type UserModalProps = {
   userUrl: string;
+  isOpen: boolean;
+  onClose: () => void;
 } & UseDisclosureProps;
 
 export default function UserModal({
@@ -70,8 +73,10 @@ export default function UserModal({
                 <Center>
                   <ModalLoadingSkeleton />
                 </Center>
-              ) : (
+              ) : user ? (
                 <UserBio user={user} />
+              ) : (
+                <Text color='red.500'>Could not load user data 😣</Text>
               )}
             </ModalBody>
             <ModalFooter>
