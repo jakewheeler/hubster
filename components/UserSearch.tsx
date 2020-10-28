@@ -96,7 +96,7 @@ export default function UserSearch() {
       </FormControl>
 
       {status === 'loading' ? <Spinner /> : null}
-      {status === 'success' && enableSearch ? (
+      {status === 'success' && users && enableSearch ? (
         <>
           <PageController
             page={page}
@@ -124,7 +124,7 @@ type PageControllerProps = {
   setEnableSearch: (value: SetStateAction<boolean>) => void;
   setPage: (value: SetStateAction<number>) => void;
   page: number;
-  latestData: SearchedUser[];
+  latestData: SearchedUser[] | undefined;
   totalCount: number;
 } & BoxProps;
 
