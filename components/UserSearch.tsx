@@ -10,6 +10,8 @@ import {
   IconButton,
   IconButtonProps,
   BoxProps,
+  List,
+  ListItem,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
@@ -64,7 +66,7 @@ export default function UserSearch() {
     } else {
       toast({
         description: 'Enter something to search 🤔',
-        status: 'info',
+        status: 'warning',
         duration: 3000,
         title: 'Search text is required',
       });
@@ -93,9 +95,7 @@ export default function UserSearch() {
         </HStack>
       </FormControl>
 
-      {status === 'loading' ? (
-        <Spinner />
-      ) : null}
+      {status === 'loading' ? <Spinner /> : null}
       {status === 'success' && enableSearch ? (
         <>
           <PageController
@@ -170,11 +170,13 @@ type UserResultsProps = {
 
 function UserResults({ users }: UserResultsProps) {
   return (
-    <VStack spacing={4} minW='100%'>
+    <List spacing={2} minW='100%'>
       {users.map((user) => (
-        <UserCard user={user} key={user.id} />
+        <ListItem>
+          <UserCard user={user} key={user.id} />
+        </ListItem>
       ))}
-    </VStack>
+    </List>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useDisclosure, HStack, Avatar, Text } from '@chakra-ui/core';
 import { SearchedUser } from '../types';
 import UserModal from './Modal';
+
 export default function UserCard({ user }: { user: SearchedUser }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
