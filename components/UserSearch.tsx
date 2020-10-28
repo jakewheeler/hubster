@@ -38,10 +38,9 @@ export default function UserSearch() {
       enabled: enableSearch,
       onError: () =>
         toast({
-          description: 'Could not fetch user list 😔',
+          description:
+            'Could not fetch user list 😔 try again in a few seconds',
           duration: 9000,
-          isClosable: true,
-          position: 'bottom',
           status: 'error',
           title: 'Probably rate-limited',
         }),
@@ -62,6 +61,13 @@ export default function UserSearch() {
     if (searchText !== '') {
       // await refetch();
       setEnableSearch(true);
+    } else {
+      toast({
+        description: 'Enter something to search 🤔',
+        status: 'info',
+        duration: 3000,
+        title: 'Search text is required',
+      });
     }
   }
 
@@ -88,7 +94,7 @@ export default function UserSearch() {
       </FormControl>
 
       {status === 'loading' ? (
-        <Spinner top={10} right={10} position='fixed' />
+        <Spinner />
       ) : null}
       {status === 'success' && enableSearch ? (
         <>
