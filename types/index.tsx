@@ -59,3 +59,52 @@ export interface SearchResults {
   incomplete_results: boolean;
   items: SearchedUser[];
 }
+
+interface Core {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface Search {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface Graphql {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface IntegrationManifest {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface CodeScanningUpload {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+interface Resources {
+  core: Core;
+  search: Search;
+  graphql: Graphql;
+  integration_manifest: IntegrationManifest;
+  code_scanning_upload: CodeScanningUpload;
+}
+
+interface Rate {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+export interface RateLimitResponse {
+  resources: Resources;
+  rate: Rate;
+}

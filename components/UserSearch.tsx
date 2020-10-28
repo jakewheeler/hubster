@@ -9,72 +9,74 @@ import {
   Text,
   IconButton,
   IconButtonProps,
+  BoxProps,
+  List,
+  ListItem,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { SearchedUser, SearchResults } from '../types';
+import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
+import { SearchedUser } from '../types';
 import UserCard from './UserCard';
+import { usePaginatedQuery } from 'react-query';
+import { fetchSearchResults } from '../api';
 
 export default function UserSearch() {
-  let [isLoading, setIsLoading] = useState(false);
   let [searchText, setSearchText] = useState('');
-  let [users, setUsers] = useState<SearchedUser[]>([]);
-  let [currentPage, setCurrentPage] = useState(1);
+  let [enableSearch, setEnableSearch] = useState(false);
+  let [page, setPage] = useState(1);
   let toast = useToast();
+
+  const { status, resolvedData: users, latestData } = usePaginatedQuery<
+    SearchedUser[],
+    Error
+  >(
+    [`users/${searchText}`, page],
+    async (key: string, page: number) => {
+      // console.log(key, page);
+      let results = await fetchSearchResults(searchText, page);
+      return results.items;
+    },
+    {
+      enabled: enableSearch,
+      onError: () =>
+        toast({
+          description:
+            'Could not fetch user list 😔 try again in a few seconds',
+          duration: 9000,
+          status: 'error',
+          title: 'Probably rate-limited',
+        }),
+      refetchOnWindowFocus: false,
+      retry: false,
+      refetchOnMount: false,
+      staleTime: 600000,
+    }
+  );
 
   function onTextChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.currentTarget.value);
+    setEnableSearch(false);
+    setPage(1);
   }
-
-  useEffect(() => {
-    doSearch();
-  }, [currentPage]);
 
   async function doSearch() {
     if (searchText !== '') {
-      setUsers([]);
-      setIsLoading(true);
-      try {
-        let searchData: SearchResults = await fetchSearchResults(
-          searchText,
-          currentPage
-        );
-        setUsers(searchData.items);
-      } catch (e) {
-        toast({
-          description: 'Could not fetch user list 😔',
-          duration: 9000,
-          isClosable: true,
-          position: 'bottom',
-          status: 'error',
-          title: 'Probably rate-limited',
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      // await refetch();
+      setEnableSearch(true);
+    } else {
+      toast({
+        description: 'Enter something to search 🤔',
+        status: 'warning',
+        duration: 3000,
+        title: 'Search text is required',
+      });
     }
   }
 
   async function onSearch(e: FormEvent<HTMLDivElement>) {
     e.preventDefault();
-    setCurrentPage(1);
+    setPage(1);
     await doSearch();
-  }
-
-  async function goForward() {
-    if (currentPage < 100) {
-      // we can go forward
-      setCurrentPage((current) => current + 1);
-      await doSearch();
-    }
-  }
-
-  async function goBack() {
-    if (currentPage > 1) {
-      // we can navigate back one page
-      setCurrentPage((current) => current - 1);
-      await doSearch();
-    }
   }
 
   return (
@@ -93,43 +95,73 @@ export default function UserSearch() {
         </HStack>
       </FormControl>
 
-      {isLoading ? <Spinner /> : null}
-      {users?.length > 0 ? (
+      {status === 'loading' ? <Spinner /> : null}
+      {status === 'success' && enableSearch ? (
         <>
+          <PageController
+            page={page}
+            setPage={setPage}
+            setEnableSearch={setEnableSearch}
+            latestData={latestData}
+            totalCount={users.length}
+            display={{ base: 'block', md: 'none' }}
+          />
           <UserResults users={users} />
-          <VStack>
-            <Text>{currentPage}</Text>
-            <HStack>
-              <BackPageButton aria-label='Go back to last page' 
-              disabled={currentPage <= 1} onClick={goBack} />
-
-              <NextPageButton aria-label='Go forward to next page' 
-              disabled={currentPage >= 100} 
-              onClick={goForward} />
-            </HStack>
-          </VStack>
+          <PageController
+            page={page}
+            setPage={setPage}
+            setEnableSearch={setEnableSearch}
+            totalCount={users.length}
+            latestData={latestData}
+          />
         </>
       ) : null}
     </VStack>
   );
 }
 
-async function fetchSearchResults(searchText: string, currentPage: number): Promise<SearchResults> {
-  // free tier API only allows 1000 first results from search
-  const maxPages = 100;
-  const showPerPage = 10;
+type PageControllerProps = {
+  setEnableSearch: (value: SetStateAction<boolean>) => void;
+  setPage: (value: SetStateAction<number>) => void;
+  page: number;
+  latestData: SearchedUser[];
+  totalCount: number;
+} & BoxProps;
 
-  const searchUserEndpoint = 'https://api.github.com/search/users?';
-  const endpointWithQuery = `${searchUserEndpoint}q=${searchText}+in:login+type:user&page=${currentPage}&per_page=${showPerPage}`;
-  const resp = await fetch(endpointWithQuery);
+function PageController({
+  setEnableSearch,
+  setPage,
+  page,
+  latestData,
+  totalCount,
+  ...props
+}: PageControllerProps) {
+  return (
+    <VStack {...props}>
+      <Text align='center'>{page}</Text>
+      <HStack>
+        <BackPageButton
+          aria-label='Go back to last page'
+          disabled={page === 1}
+          onClick={() => {
+            setEnableSearch(true);
+            setPage((prevState) => Math.max(prevState - 1, 1));
+          }}
+        />
 
-  if (!resp.ok) {
-    throw new Error('Rate limit has been exceeded.')
-  }
-
-  const searchData: SearchResults = await resp.json();
-
-  return searchData;
+        <NextPageButton
+          aria-label='Go forward to next page'
+          disabled={page === 100 || totalCount < 10}
+          onClick={() => {
+            setEnableSearch(true);
+            setPage((prevState) =>
+              !latestData ? prevState : Math.min(prevState + 1, 100)
+            );
+          }}
+        />
+      </HStack>
+    </VStack>
+  );
 }
 
 type UserResultsProps = {
@@ -138,16 +170,17 @@ type UserResultsProps = {
 
 function UserResults({ users }: UserResultsProps) {
   return (
-    <VStack spacing={4} minW='100%'>
+    <List spacing={2} minW='100%'>
       {users.map((user) => (
-        <UserCard user={user} key={user.id} />
+        <ListItem>
+          <UserCard user={user} key={user.id} />
+        </ListItem>
       ))}
-    </VStack>
+    </List>
   );
 }
 
-
-function BackPageButton({...props }: IconButtonProps) {
+function BackPageButton({ ...props }: IconButtonProps) {
   return (
     <IconButton
       bgColor='gray.600'
@@ -158,7 +191,7 @@ function BackPageButton({...props }: IconButtonProps) {
   );
 }
 
-function NextPageButton({...props }: IconButtonProps) {
+function NextPageButton({ ...props }: IconButtonProps) {
   return (
     <IconButton
       bgColor='gray.600'

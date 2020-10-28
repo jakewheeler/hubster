@@ -15,7 +15,6 @@ import {
   ModalContent,
   Button,
 } from '@chakra-ui/core';
-import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { User } from '../types';
 import UserBio from './UserBio';

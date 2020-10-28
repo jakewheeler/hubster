@@ -63,7 +63,9 @@ export default function Home() {
       <Header />
       <Center id='container' p={5}>
         <VStack spacing={4} width='700px'>
-          <Heading color='gray.600'>Search for GitHub users</Heading>
+          <Heading color='gray.600' fontSize={{ base: 25, md: 45 }}>
+            Search for GitHub users
+          </Heading>
           <UserSearch />
         </VStack>
       </Center>
