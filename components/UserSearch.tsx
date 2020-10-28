@@ -172,7 +172,7 @@ function UserResults({ users }: UserResultsProps) {
   return (
     <List spacing={2} minW='100%'>
       {users.map((user) => (
-        <ListItem>
+        <ListItem key={user.id}>
           <UserCard user={user} key={user.id} />
         </ListItem>
       ))}

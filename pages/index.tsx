@@ -16,6 +16,7 @@ import { SearchedUser } from '../types';
 function useFetchOctocat() {
   const [user, setUser] = useState<SearchedUser | null>(null);
 
+  // fetch user once
   useEffect(() => {
     async function fetchOctocat() {
       if (!user) {
@@ -26,7 +27,7 @@ function useFetchOctocat() {
       }
     }
     fetchOctocat();
-  }, [user, setUser]);
+  }, [user]);
 
   return user;
 }
@@ -59,14 +60,26 @@ function Header() {
 
 export default function Home() {
   return (
+    <Container>
+      <Heading color='gray.600' fontSize={{ base: 25, md: 45 }}>
+        Search for GitHub users
+      </Heading>
+      <UserSearch />
+    </Container>
+  );
+}
+
+type ContainerProps = {
+  children: React.ReactNode;
+};
+
+function Container({ children }: ContainerProps) {
+  return (
     <Box minH='100vh'>
       <Header />
       <Center id='container' p={5}>
         <VStack spacing={4} width='700px'>
-          <Heading color='gray.600' fontSize={{ base: 25, md: 45 }}>
-            Search for GitHub users
-          </Heading>
-          <UserSearch />
+          {children}
         </VStack>
       </Center>
     </Box>
