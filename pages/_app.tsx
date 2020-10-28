@@ -1,8 +1,7 @@
 import { ChakraProvider } from '@chakra-ui/core';
-import { theme, Theme } from '@chakra-ui/theme';
-import { merge } from '@chakra-ui/utils';
+import { AppProps } from 'next/app';
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ChakraProvider>
       <Component {...pageProps} />

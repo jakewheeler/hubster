@@ -14,7 +14,7 @@ import UserSearch from '../components/UserSearch';
 import { SearchedUser } from '../types';
 
 function useFetchOctocat() {
-  const [user, setUser] = useState<SearchedUser>(null);
+  const [user, setUser] = useState<SearchedUser | null>(null);
 
   useEffect(() => {
     async function fetchOctocat() {
