@@ -12,6 +12,7 @@ import {
   BoxProps,
   List,
   ListItem,
+  useBreakpointValue,
 } from '@chakra-ui/core';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
@@ -24,6 +25,7 @@ export default function UserSearch() {
   let [searchText, setSearchText] = useState('');
   let [enableSearch, setEnableSearch] = useState(false);
   let [page, setPage] = useState(1);
+  let displayTopPageNav = useBreakpointValue({ base: true, md: false });
   let toast = useToast();
 
   const { status, resolvedData: users, latestData } = usePaginatedQuery<
@@ -98,14 +100,16 @@ export default function UserSearch() {
       {status === 'loading' ? <Spinner /> : null}
       {status === 'success' && users && enableSearch ? (
         <>
-          <PageController
-            page={page}
-            setPage={setPage}
-            setEnableSearch={setEnableSearch}
-            latestData={latestData}
-            totalCount={users.length}
-            display={{ base: 'block', md: 'none' }}
-          />
+          {displayTopPageNav ? (
+            <PageController
+              page={page}
+              setPage={setPage}
+              setEnableSearch={setEnableSearch}
+              latestData={latestData}
+              totalCount={users.length}
+              // display={{ base: 'block', md: 'none' }}
+            />
+          ) : null}
           <UserResults users={users} />
           <PageController
             page={page}
