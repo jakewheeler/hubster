@@ -7,8 +7,6 @@ import {
   Text,
   Center,
   VStack,
-  SkeletonCircle,
-  SkeletonText,
 } from '@chakra-ui/core';
 import React from 'react';
 import UserSearch from '../components/UserSearch';

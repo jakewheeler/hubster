@@ -1,20 +1,25 @@
-import { TooltipProps, Tooltip } from '@chakra-ui/core';
-import React from 'react';
+import { TooltipProps, Tooltip, ComponentWithAs } from '@chakra-ui/core';
+import React, { forwardRef } from 'react';
 
 type ModalToolTipProps = {
   text: string;
 } & TooltipProps;
 
-export default function ModalToolTip({ text, ...props }: ModalToolTipProps) {
-  return (
-    <Tooltip
-      {...props}
-      shouldWrapChildren
-      label={text}
-      aria-label={text}
-      zIndex={1401}
-    >
-      {props.children}
-    </Tooltip>
-  );
-}
+const ModalToolTip = forwardRef<HTMLDivElement, ModalToolTipProps>(
+  (props, ref) => {
+    return (
+      <Tooltip
+        {...props}
+        ref={ref}
+        shouldWrapChildren
+        label={props.text}
+        aria-label={props.text}
+        zIndex={1401}
+      >
+        {props.children}
+      </Tooltip>
+    );
+  }
+);
+
+export default ModalToolTip;
