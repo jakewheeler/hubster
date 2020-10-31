@@ -34,7 +34,6 @@ export default function UserSearch() {
   >(
     [`users/${searchText}`, page],
     async (key: string, page: number) => {
-      // console.log(key, page);
       let results = await fetchSearchResults(searchText, page);
       return results.items;
     },
@@ -47,6 +46,7 @@ export default function UserSearch() {
           duration: 9000,
           status: 'error',
           title: 'Probably rate-limited',
+          isClosable: true,
         }),
       refetchOnWindowFocus: false,
       retry: false,
@@ -63,7 +63,6 @@ export default function UserSearch() {
 
   async function doSearch() {
     if (searchText !== '') {
-      // await refetch();
       setEnableSearch(true);
     } else {
       toast({
@@ -71,6 +70,7 @@ export default function UserSearch() {
         status: 'warning',
         duration: 3000,
         title: 'Search text is required',
+        isClosable: true,
       });
     }
   }
@@ -107,7 +107,6 @@ export default function UserSearch() {
               setEnableSearch={setEnableSearch}
               latestData={latestData}
               totalCount={users.length}
-              // display={{ base: 'block', md: 'none' }}
             />
           ) : null}
           <UserResults users={users} />
