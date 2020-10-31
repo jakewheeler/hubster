@@ -7,36 +7,44 @@ import {
   Text,
   Center,
   VStack,
-  Spinner,
   SkeletonCircle,
   SkeletonText,
 } from '@chakra-ui/core';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import UserSearch from '../components/UserSearch';
 import { SearchedUser } from '../types';
+import { GetStaticProps } from 'next';
 
-function useFetchOctocat() {
-  const [user, setUser] = useState<SearchedUser | null>(null);
+export const getStaticProps: GetStaticProps = async () => {
+  const res = await fetch('https://api.github.com/users/octocat');
+  const octocat: SearchedUser = await res.json();
+  return {
+    props: {
+      octocat,
+    },
+  };
+};
 
-  // fetch user once
-  useEffect(() => {
-    async function fetchOctocat() {
-      if (!user) {
-        const octocat: SearchedUser = await (
-          await fetch('https://api.github.com/users/octocat')
-        ).json();
-        setUser(octocat);
-      }
-    }
-    fetchOctocat();
-  }, [user]);
+type HomeProps = {
+  octocat: SearchedUser;
+};
 
-  return user;
+export default function Home({ octocat }: HomeProps) {
+  return (
+    <Container headerUser={octocat}>
+      <Heading as='h1' color='gray.600' fontSize={{ base: 25, md: 45 }}>
+        Search for GitHub users
+      </Heading>
+      <UserSearch />
+    </Container>
+  );
 }
 
-function Header() {
-  const headerUser = useFetchOctocat();
+type HeaderProps = {
+  headerUser: SearchedUser;
+};
 
+function Header({ headerUser }: HeaderProps) {
   return (
     <Flex
       className='header-parent'
@@ -56,42 +64,23 @@ function Header() {
       >
         <Heading color='gray.50'>Hubster</Heading>
         <HStack spacing={4}>
-          {headerUser ? (
-            <>
-              <Avatar name='Some dude' src={headerUser.avatar_url} />
-              <Text color='gray.50'>{headerUser.login}</Text>
-            </>
-          ) : (
-            <HStack padding='6' boxShadow='lg' bg='white'>
-              <SkeletonCircle size='10' />
-              <SkeletonText mt='4' noOfLines={4} spacing='4' />
-            </HStack>
-          )}
+          <Avatar name='Some dude' src={headerUser.avatar_url} />
+          <Text color='gray.50'>{headerUser.login}</Text>
         </HStack>
       </Flex>
     </Flex>
   );
 }
 
-export default function Home() {
-  return (
-    <Container>
-      <Heading as='h1' color='gray.600' fontSize={{ base: 25, md: 45 }}>
-        Search for GitHub users
-      </Heading>
-      <UserSearch />
-    </Container>
-  );
-}
-
 type ContainerProps = {
+  headerUser: SearchedUser;
   children: React.ReactNode;
 };
 
-function Container({ children }: ContainerProps) {
+function Container({ headerUser, children }: ContainerProps) {
   return (
     <Box minH='100vh'>
-      <Header />
+      <Header headerUser={headerUser} />
       <Center id='container' p={5} as='main'>
         <VStack spacing={4} width='700px'>
           {children}
