@@ -5,7 +5,7 @@ export default function Blog({ url }: { url: string | null }) {
   if (!url) return null;
   return (
     <HStack>
-      <ModalToolTip text={'Blog'}>
+      <ModalToolTip text='Blog'>
         <svg
           style={{ height: 15, width: 15 }}
           fill='none'
@@ -21,7 +21,9 @@ export default function Blog({ url }: { url: string | null }) {
           />
         </svg>
       </ModalToolTip>
-      <Link>{url}</Link>
+      <Link href={url} isExternal target='_blank'>
+        {url}
+      </Link>
     </HStack>
   );
 }

@@ -39,15 +39,16 @@ export default function UserSearch() {
     },
     {
       enabled: enableSearch,
-      onError: () =>
+      onError: () => {
         toast({
           description:
             'Could not fetch user list 😔 try again in a few seconds',
           duration: 9000,
           status: 'error',
-          title: 'Probably rate-limited',
+          title: 'Rate-limited',
           isClosable: true,
-        }),
+        });
+      },
       refetchOnWindowFocus: false,
       retry: false,
       refetchOnMount: false,
@@ -61,7 +62,7 @@ export default function UserSearch() {
     setPage(1);
   }
 
-  async function doSearch() {
+  function doSearch() {
     if (searchText !== '') {
       setEnableSearch(true);
     } else {
@@ -75,10 +76,10 @@ export default function UserSearch() {
     }
   }
 
-  async function onSearch(e: FormEvent<HTMLDivElement>) {
+  function onSearch(e: FormEvent<HTMLDivElement>) {
     e.preventDefault();
     setPage(1);
-    await doSearch();
+    doSearch();
   }
 
   return (

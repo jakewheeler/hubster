@@ -8,7 +8,9 @@ export default function Twitter({ username }: { username: string }) {
       <ModalToolTip text='Twitter'>
         <Image w='15px' h='15px' src='/twitter.svg' />
       </ModalToolTip>
-      <Link href={`https://twitter.com/${username}`}>@{username}</Link>
+      <Link href={`https://twitter.com/${username}`} isExternal target='_blank'>
+        @{username}
+      </Link>
     </HStack>
   );
 }
