@@ -7,7 +7,7 @@ import {
   Divider,
   Flex,
   Center,
-} from '@chakra-ui/core';
+} from '@chakra-ui/react';
 import Company from './Company';
 import Blog from './Blog';
 import Location from './Location';

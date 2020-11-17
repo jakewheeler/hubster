@@ -1,4 +1,4 @@
-import { HStack, Link, Image } from '@chakra-ui/core';
+import { HStack, Link, Image } from '@chakra-ui/react';
 import ModalToolTip from './ModalToolTip';
 
 export default function Twitter({ username }: { username: string }) {

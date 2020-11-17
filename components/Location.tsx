@@ -1,4 +1,4 @@
-import { BoxProps, HStack, Box, Text } from '@chakra-ui/core';
+import { BoxProps, HStack, Box, Text } from '@chakra-ui/react';
 import ModalToolTip from './ModalToolTip';
 
 type LocationProps = {

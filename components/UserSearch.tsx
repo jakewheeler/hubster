@@ -13,7 +13,7 @@ import {
   List,
   ListItem,
   useBreakpointValue,
-} from '@chakra-ui/core';
+} from '@chakra-ui/react';
 import { ArrowLeftIcon, ArrowRightIcon } from '@chakra-ui/icons';
 import { ChangeEvent, FormEvent, SetStateAction, useState } from 'react';
 import { SearchedUser } from '../types';
@@ -40,10 +40,11 @@ export default function UserSearch() {
     {
       enabled: enableSearch,
       onError: () => {
+        setPage((value) => value - 1);
         toast({
           description:
             'Could not fetch user list 😔 try again in a few seconds',
-          duration: 9000,
+          duration: 3000,
           status: 'error',
           title: 'Rate-limited',
           isClosable: true,

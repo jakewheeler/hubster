@@ -1,4 +1,4 @@
-import { Box, HStack, Text } from '@chakra-ui/core';
+import { Box, HStack, Text } from '@chakra-ui/react';
 import ModalToolTip from './ModalToolTip';
 
 export default function Company({ name }: { name: string | null }) {

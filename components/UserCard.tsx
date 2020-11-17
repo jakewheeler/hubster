@@ -1,4 +1,4 @@
-import { useDisclosure, HStack, Avatar, Text } from '@chakra-ui/core';
+import { useDisclosure, HStack, Avatar, Text } from '@chakra-ui/react';
 import { SearchedUser } from '../types';
 import UserModal from './Modal';
 

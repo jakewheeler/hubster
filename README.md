@@ -1,30 +1,25 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Hubster
 
-## Getting Started
+Hubster is an app that lets you search for users on GitHub. You can search for anyone's username and find information about them.
 
-First, run the development server:
+## How does Hubster work? 🤔
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+Hubster is a simple app built on top of the public GitHub API (which is really good!). Hubster does not require users to login and does not use its own API key behind the scenes. However, this was part of my intention with the project. I was curious how nice of a user experience I could make when running into walls such as rate-limiting.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## What does the tech look like? 💻
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+The stack I used consists of:
 
-## Learn More
+- Next.js
+- React
+- Chakra UI
+- TypeScript
+- react-query
 
-To learn more about Next.js, take a look at the following resources:
+## Outcomes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+In the end, the product came out nicely and met my initial goal of making a basic GitHub user search and learning some new tech.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+I really wanted to dig a bit deeper into react-query's pagination capabilities, understand how to better type custom Chakra UI components, and dive into GitHub's REST API.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/import?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+All in all, I think the design looks nice, I learned a lot about react-query, and always have an enjoyable experience when working with Chakra UI.

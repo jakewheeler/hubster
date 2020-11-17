@@ -1,5 +1,5 @@
 import ModalToolTip from './ModalToolTip';
-import { Link, HStack } from '@chakra-ui/core';
+import { Link, HStack } from '@chakra-ui/react';
 
 export default function Blog({ url }: { url: string | null }) {
   if (!url) return null;

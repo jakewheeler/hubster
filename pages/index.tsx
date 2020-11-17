@@ -7,7 +7,7 @@ import {
   Text,
   Center,
   VStack,
-} from '@chakra-ui/core';
+} from '@chakra-ui/react';
 import React from 'react';
 import UserSearch from '../components/UserSearch';
 import { SearchedUser } from '../types';

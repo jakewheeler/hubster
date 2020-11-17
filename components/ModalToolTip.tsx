@@ -1,4 +1,4 @@
-import { TooltipProps, Tooltip, ComponentWithAs } from '@chakra-ui/core';
+import { TooltipProps, Tooltip, ComponentWithAs } from '@chakra-ui/react';
 import React, { forwardRef } from 'react';
 
 type ModalToolTipProps = {
